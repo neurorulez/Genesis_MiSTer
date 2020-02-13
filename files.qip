@@ -20,3 +20,4 @@ set_global_assignment -name SYSTEMVERILOG_FILE cofi.sv
 set_global_assignment -name SYSTEMVERILOG_FILE multitap.sv
 set_global_assignment -name SYSTEMVERILOG_FILE system.sv
 set_global_assignment -name SYSTEMVERILOG_FILE Genesis.sv
+set_global_assignment -name VERILOG_FILE joydb15.v

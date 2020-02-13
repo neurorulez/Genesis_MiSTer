@@ -118,6 +118,7 @@ module emu
 	// 1 - D-/TX
 	// 2..6 - USR2..USR6
 	// Set USER_OUT to 1 to read from USER_IN.
+    output	      USER_MODE,	
 	input   [6:0] USER_IN,
 	output  [6:0] USER_OUT,
 
@@ -125,7 +126,12 @@ module emu
 );
 
 assign ADC_BUS  = 'Z;
-assign USER_OUT = '1;
+
+wire   JOY_CLK, JOY_LOAD;
+wire   JOY_DATA  = USER_IN[5];
+assign USER_OUT  = |status[63:62] ? {5'b11111,JOY_CLK,JOY_LOAD} : '1;
+assign USER_MODE = |status[63:62] ;
+
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
 assign BUTTONS   = osd_btn;
 assign {SD_SCK, SD_MOSI, SD_CS} = 'Z;
@@ -187,6 +193,7 @@ localparam CONF_STR = {
 	"O67,Region,JP,US,EU;",
 	"O89,Auto Region,File Ext,Header,Disabled;",
 	"D2ORS,Priority,US>EU>JP,EU>US>JP,US>JP>EU,JP>US>EU;",
+    "oUV,Serial SNAC DB15,Off,1 Player,2 Players;",		
 	"-;",
 	"C,Cheats;",
 	"H1OO,Cheats Enabled,Yes,No;",
@@ -228,7 +235,7 @@ localparam CONF_STR = {
 
 wire [63:0] status;
 wire  [1:0] buttons;
-wire [11:0] joystick_0,joystick_1,joystick_2,joystick_3;
+wire [11:0] joystick_0_USB,joystick_1_USB,joystick_2_USB,joystick_3_USB;
 wire        ioctl_download;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
@@ -255,6 +262,23 @@ wire [24:0] ps2_mouse;
 wire [21:0] gamma_bus;
 wire [15:0] sdram_sz;
 
+//GENESIS:   ZYX MS CBAUDLR
+wire [11:0] joystick_0 = |status[63:62] ? {joydb15_1[11:10], joydb15_1[7], joydb15_1[9:8], joydb15_1[6:0]} : joystick_0_USB;
+wire [11:0] joystick_1 =  status[63]    ? {joydb15_2[11:10], joydb15_2[7], joydb15_2[9:8], joydb15_2[6:0]} : status[62] ? joystick_0_USB : joystick_1_USB;
+wire [11:0] joystick_2 =  status[63]    ? joystick_0_USB : status[62] ? joystick_1_USB : joystick_2_USB;
+wire [11:0] joystick_3 =  status[63]    ? joystick_1_USB : status[62] ? joystick_2_USB : joystick_3_USB;
+
+reg [15:0] joydb15_1,joydb15_2;
+joy_db15 joy_db15
+(
+  .clk       ( clk_sys   ), //48MHz
+  .JOY_CLK   ( JOY_CLK   ),
+  .JOY_DATA  ( JOY_DATA  ),
+  .JOY_LOAD  ( JOY_LOAD  ),
+  .joystick1 ( joydb15_1 ),
+  .joystick2 ( joydb15_2 )	  
+);
+
 hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
 (
 	.clk_sys(clk_sys),
@@ -262,10 +286,10 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
 
 	.conf_str(CONF_STR),
 
-	.joystick_0(joystick_0),
-	.joystick_1(joystick_1),
-	.joystick_2(joystick_2),
-	.joystick_3(joystick_3),
+	.joystick_0(joystick_0_USB),
+	.joystick_1(joystick_1_USB),
+	.joystick_2(joystick_2_USB),
+	.joystick_3(joystick_3_USB),
 	.buttons(buttons),
 	.forced_scandoubler(forced_scandoubler),
 	.new_vmode(new_vmode),
