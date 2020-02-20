@@ -290,6 +290,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
 	.joystick_1(joystick_1_USB),
 	.joystick_2(joystick_2_USB),
 	.joystick_3(joystick_3_USB),
+	.joy_raw({(joydb15_1[8]&joydb15_1[6]),joydb15_1[4:0]}),	
 	.buttons(buttons),
 	.forced_scandoubler(forced_scandoubler),
 	.new_vmode(new_vmode),
