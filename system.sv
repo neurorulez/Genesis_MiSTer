@@ -90,6 +90,15 @@ module system
 	input  [11:0] JOY_4,
 	input   [1:0] MULTITAP,
 
+	input   [7:0] joya_in,
+	output  [7:0] joya_out,
+	output  [7:0] joya_ctl,
+	input         joya_ena,
+	input   [7:0] joyb_in,
+	output  [7:0] joyb_out,
+	output  [7:0] joyb_ctl,
+	input         joyb_ena,
+
 	input  [24:0] MOUSE,
 	input   [2:0] MOUSE_OPT,
 
@@ -217,6 +226,7 @@ always @(posedge MCLK) begin
 		if((~old_as & M68K_AS_N) || &scnt) begin
 			if (M68K_VINT) M68K_IPL_N <= 3'b001;
 			else if (M68K_HINT) M68K_IPL_N <= 3'b011;
+			else if (M68K_EXINT) M68K_IPL_N <= 3'b101;
 			else M68K_IPL_N <= 3'b111;
 		end
 	end
@@ -291,6 +301,7 @@ wire        VBUS_SEL;
 wire        VBUS_BR_N;
 wire        VBUS_BGACK_N;
 
+wire        M68K_EXINT;
 wire        M68K_HINT;
 wire        M68K_VINT;
 wire        Z80_VINT;
@@ -370,6 +381,7 @@ always @(posedge MCLK) vram32_ack <= vram32_req;
 wire VDP_hs, VDP_vs;
 assign HS = ~VDP_hs;
 assign VS = ~VDP_vs;
+reg HL;
 
 vdp vdp
 (
@@ -396,6 +408,9 @@ vdp vdp
 	.VRAM32_ack(vram32_ack),
 	.VRAM32_a(vram32_a),
 	.VRAM32_q(vram32_q),
+
+	.EXINT(M68K_EXINT),
+	.HL(HL),
 	
 	.HINT(M68K_HINT),
 	.VINT_TG68(M68K_VINT),
@@ -524,6 +539,17 @@ multitap multitap
 
 	.MOUSE(MOUSE),
 	.MOUSE_OPT(MOUSE_OPT),
+
+	.joya_in(joya_in),
+	.joya_out(joya_out),
+	.joya_ctl(joya_ctl),
+	.joya_ena(joya_ena),
+	.joyb_in(joyb_in),
+	.joyb_out(joyb_out),
+	.joyb_ctl(joyb_ctl),
+	.joyb_ena(joyb_ena),
+
+	.HL(HL),
 
 	.PAL(PAL),
 	.EXPORT(EXPORT),

@@ -54,6 +54,17 @@ module multitap
 	input [24:0] MOUSE,
 	input  [2:0] MOUSE_OPT,
 
+	input   [7:0] joya_in,
+	output  [7:0] joya_out,
+	output  [7:0] joya_ctl,
+	input         joya_ena,
+	input   [7:0] joyb_in,
+	output  [7:0] joyb_out,
+	output  [7:0] joyb_ctl,
+	input         joyb_ena,
+
+	output       HL,	
+	
 	input        PAL,
 	input        EXPORT,
 

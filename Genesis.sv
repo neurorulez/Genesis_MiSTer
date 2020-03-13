@@ -118,14 +118,15 @@ module emu
 	// 1 - D-/TX
 	// 2..6 - USR2..USR6
 	// Set USER_OUT to 1 to read from USER_IN.
-	input   [6:0] USER_IN,
-	output  [6:0] USER_OUT,
+	output  [2:0] USER_MODE,
+	input   [7:0] USER_IN,
+	output  [7:0] USER_OUT,
 
 	input         OSD_STATUS
 );
 
 assign ADC_BUS  = 'Z;
-assign USER_OUT = '1;
+//assign USER_OUT = '1;
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
 assign BUTTONS   = osd_btn;
 assign {SD_SCK, SD_MOSI, SD_CS} = 'Z;
@@ -205,6 +206,8 @@ localparam CONF_STR = {
 	"OB,FM Chip,YM2612,YM3438;",
 	"ON,HiFi PCM,No,Yes;",
 	"-;",
+	"o5,Serial Mode,None,SNAC;",
+	"H4o6,SNAC Mode, 1 Player, 2 Players;",		
 	"O4,Swap Joysticks,No,Yes;",
 	"O5,6 Buttons Mode,No,Yes;",
 	"OLM,Multitap,Disabled,4-Way,TeamPlayer,J-Cart;",
@@ -273,7 +276,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
 	.status(status),
 	.status_in({status[63:8],region_req,status[5:0]}),
 	.status_set(region_set),
-	.status_menumask({~dbg_menu,~status[8],~gg_available,~bk_ena}),
+	.status_menumask({~raw_serial,~dbg_menu,~status[8],~gg_available,~bk_ena}),
 
 	.ioctl_download(ioctl_download),
 	.ioctl_index(ioctl_index),
@@ -430,7 +433,15 @@ system system
 	.JOY_3(joystick_2),
 	.JOY_4(joystick_3),
 	.MULTITAP(status[22:21]),
-
+	.joya_in(joya_in),
+	.joya_out(joya_out),
+	.joya_ctl(joya_ctl),
+	.joya_ena(joya_ena),
+	.joyb_in(joyb_in),
+	.joyb_out(joyb_out),
+	.joyb_ctl(joyb_ctl),
+	.joyb_ena(joyb_ena),
+	
 	.MOUSE(ps2_mouse),
 	.MOUSE_OPT(status[20:18]),
 
@@ -848,5 +859,41 @@ always @(posedge clk_sys) begin
 	end
 end
 
+wire raw_serial  = status[37];
+wire raw_serial2 = status[38];
+wire joy_swap    = status[4];
+
+wire [7:0] joya_in,joya_out,joya_ctl;
+wire [7:0] joyb_in,joyb_out,joyb_ctl;
+wire       joya_ena,joyb_ena;
+
+always @(posedge clk_sys) begin
+	if (raw_serial & ~raw_serial2) begin
+		USER_MODE   <= '0;
+		joyb_ena     <= 0;
+		joya_ena     <= 1;
+		joya_in[0]   <= USER_IN[5];//up
+		joya_in[1]   <= USER_IN[7];//down	
+		joya_in[2]   <= USER_IN[1];//left	
+		joya_in[3]   <= USER_IN[2];//right
+		joya_in[4]   <= USER_IN[3];//b TL		
+		joya_in[5]   <= USER_IN[6];//c TR GPIO7			
+		joya_in[6]   <= USER_IN[0];//  TH
+		joya_in[7]   <= 0;
+		USER_OUT[5] <= joya_ctl[0] ? joya_out[0] : 1'b1;
+		USER_OUT[7] <= joya_ctl[1] ? joya_out[1] : 1'b1;
+		USER_OUT[1] <= joya_ctl[2] ? joya_out[2] : 1'b1;
+		USER_OUT[2] <= joya_ctl[3] ? joya_out[3] : 1'b1;
+		USER_OUT[3] <= joya_ctl[4] ? joya_out[4] : 1'b1;
+		USER_OUT[6] <= joya_ctl[5] ? joya_out[5] : 1'b1;
+		USER_OUT[0] <= joya_ctl[6] ? joya_out[6] : 1'b1;	
+		USER_OUT[4] <= 1'b1;	//SPLITTER DB9
+	end else begin
+		joya_ena <= '0;
+		joyb_ena <= '0;
+		USER_MODE   <= '0;
+		USER_OUT <= '1;
+	end
+end
 
 endmodule

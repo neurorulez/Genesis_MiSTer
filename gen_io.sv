@@ -73,6 +73,15 @@ module gen_io
 	input     [24:0] MOUSE,
 	input      [2:0] MOUSE_OPT,
 
+	input   	[7:0] joya_in,
+	output  	[7:0] joya_out,
+	output  	[7:0] joya_ctl,
+	input         	  joya_ena,
+	input   	[7:0] joyb_in,
+	output  	[7:0] joyb_out,
+	output 		[7:0] joyb_ctl,
+	input			  joyb_ena,
+
 	input            SEL,
 	input      [4:1] A,
 	input            RNW,
@@ -104,8 +113,8 @@ always @(posedge RESET or posedge CLK) begin
 				// Read
 				case(A)
 						0: DO <= {EXPORT, PAL, ~DISK, 5'd0};
-						1: DO <= (CTLA & DATA) | (~CTLA & (MOUSE_OPT[0] ? mdata : PAD1_DO));
-						2: DO <= (CTLB & DATB) | (~CTLB & (MOUSE_OPT[1] ? mdata : PAD2_DO));
+						1: DO <= (CTLA & DATA) | (~CTLA & (joya_ena ? joya_in : (MOUSE_OPT[0] ? mdata : PAD1_DO)));
+						2: DO <= (CTLB & DATB) | (~CTLB & (joyb_ena ? joyb_in : (MOUSE_OPT[1] ? mdata : PAD2_DO)));
 						3: DO <= R[3] & R[6]; // Unconnected port
 				default: DO <= R[A];
 				endcase
@@ -114,6 +123,11 @@ always @(posedge RESET or posedge CLK) begin
 		end
 	end
 end
+
+assign joya_out = CTLA & DATA;
+assign joyb_out = CTLB & DATB;
+assign joya_ctl = CTLA;
+assign joyb_ctl = CTLB;
 
 wire [7:0] PAD1_DO;
 pad_io pad1
