@@ -880,13 +880,13 @@ always @(posedge clk_sys) begin
 		joya_in[5]   <= USER_IN[6];//c TR GPIO7			
 		joya_in[6]   <= USER_IN[0];//  TH
 		joya_in[7]   <= 0;
-		USER_OUT[5] <= joya_ctl[0] ? joya_out[0] : 1'b1;
-		USER_OUT[7] <= joya_ctl[1] ? joya_out[1] : 1'b1;
-		USER_OUT[1] <= joya_ctl[2] ? joya_out[2] : 1'b1;
-		USER_OUT[2] <= joya_ctl[3] ? joya_out[3] : 1'b1;
-		USER_OUT[3] <= joya_ctl[4] ? joya_out[4] : 1'b1;
-		USER_OUT[6] <= joya_ctl[5] ? joya_out[5] : 1'b1;
-		USER_OUT[0] <= joya_ctl[6] ? joya_out[6] : 1'b1;	
+		USER_OUT[5] <= 1'b1;//joya_ctl[0] ? joya_out[0] : 1'b1;//
+		USER_OUT[7] <= 1'b1;//joya_ctl[1] ? joya_out[1] : 1'b1;//
+		USER_OUT[1] <= 1'b1;//joya_ctl[2] ? joya_out[2] : 1'b1;//
+		USER_OUT[2] <= 1'b1;//joya_ctl[3] ? joya_out[3] : 1'b1;//
+		USER_OUT[3] <= 1'b1;//joya_ctl[4] ? joya_out[4] : 1'b1;//
+		USER_OUT[6] <= 1'b1;//joya_ctl[5] ? joya_out[5] : 1'b1;//
+		USER_OUT[0] <= joya_out[6]; //joya_ctl[6] ? joya_out[6] : 1'b1;	
 		USER_OUT[4] <= 1'b1;	//SPLITTER DB9
 	end else begin
 		joya_ena <= '0;
